@@ -74,7 +74,7 @@ class _HomeActivityState extends State<HomeActivity> {
 
   _renderListData(data) {
     return ListView.separated(
-        // itemBuilder: 각각 list의 아이템을 만드는 빌더. 아이템 원소 하나에 대한 내용
+        // PopupMenu의 itemBuilder: 각각 list의 아이템을 만드는 빌더. 아이템 원소 하나에 대한 내용
         itemBuilder: (BuildContext _context, int index) {
           // index: 0 ~ 아이템 원소의 길이.
           // map돌면서 아이템 원소 크기 만큼 itmeBuilder로 ListView 안의 각각의 item을 생성함.
@@ -144,16 +144,21 @@ class _HomeActivityState extends State<HomeActivity> {
   // <===== start of Home_Body Widget =====>
   Widget _HomeBody() {
     return FutureBuilder(
+      // future 아규먼트로 해당 위젯에서 사용해야하는 비동기 Future 데이터 가져옴.
         future: contentsRepository.loadContentsFromLocation(currLocation),
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState != ConnectionState.done)
-            return Center(child: CircularProgressIndicator());
-          if (snapshot.hasError)
+
+        // builder로 사용 할 future값이 로딩 되기 전, 로딩 된 후, 에러 생길 경우에 따라서 각각 화면에 어떻게 표시할 지 정의해 줌.
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {  // snapshot값으로 현재 future값의 상태를 받아올 수 있음.
+          if (snapshot.connectionState != ConnectionState.done)  // 1. future값의 connectionState가 done이 아닐 경우 (로딩이 다 안된 경우)
+            return Center(child: CircularProgressIndicator());  // CircularProgressIndicator: 로딩 스피너 (플러터 자체 위젯)
+          if (snapshot.hasError)  // 2. future 값이 에러가 난 경우
             return Center(
                 child: Text(snapshot.hasData ? "데이터 오류" : "해당 지역의 데이터가 없습니다."));
 
+          // 3. future값이 제대로 로딩이 된 경우(hasData = true) => _renderListData: 해당 아규먼트 데이터 이용해 리스트뷰 렌더링.
           if (snapshot.hasData) return _renderListData(snapshot.data);
 
+          // null을 리턴할 수 없으므로 (_HomeBody는 not nullable, must return Widget) default로 Center 위젯 리턴
           return Center(child: Text("문제가 발생했습니다."));
         });
   }
@@ -161,6 +166,7 @@ class _HomeActivityState extends State<HomeActivity> {
   // <==== Home Widget Build =====>
   @override
   Widget build(BuildContext context) {
+    // build의 Scaffold는 최대한 간결하게
     return Scaffold(
       appBar: _HomeAppBar(),
       body: _HomeBody(),
